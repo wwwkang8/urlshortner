@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickLink - URL 단축기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    .input-group {
+      margin-bottom: 30px;
+    }
+
+    .url-input {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .url-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .shorten-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 150px;
+    }
+
+    .shorten-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .shorten-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-section {
+      margin-top: 30px;
+      display: none;
+    }
+
+    .result-box {
+      background: #f8f9ff;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .result-label {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .result-url {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #667eea;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+
+    .copy-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .copy-btn:hover {
+      background: #5a67d8;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f0f2ff;
+      border-radius: 12px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .error-message {
+      color: #e53e3e;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      .logo {
+        font-size: 2rem;
+      }
+
+      .stats {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">QuickLink</div>
+  <div class="subtitle">긴 URL을 짧고 깔끔하게 만들어보세요</div>
+
+  <div class="input-group">
+    <input type="url" id="urlInput" class="url-input" placeholder="https://example.com/very-long-url-here">
+    <div class="error-message" id="errorMessage"></div>
+  </div>
+
+  <button id="shortenBtn" class="shorten-btn">
+    <span id="btnText">단축하기</span>
+  </button>
+
+  <div id="resultSection" class="result-section">
+    <div class="result-box">
+      <div class="result-label">단축된 URL</div>
+      <div id="shortUrl" class="result-url"></div>
+      <button id="copyBtn" class="copy-btn">복사하기</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-item">
+        <div id="clickCount" class="stat-number">0</div>
+        <div class="stat-label">클릭 수</div>
+      </div>
+      <div class="stat-item">
+        <div id="totalUrls" class="stat-number">1</div>
+        <div class="stat-label">생성된 링크</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE_URL = '/api';
+  let totalUrlsCreated = 0;
+
+  document.getElementById('shortenBtn').addEventListener('click', shortenUrl);
+  document.getElementById('urlInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      shortenUrl();
+    }
+  });
+  document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+
+  async function shortenUrl() {
+    const urlInput = document.getElementById('urlInput');
+    const errorMessage = document.getElementById('errorMessage');
+    const shortenBtn = document.getElementById('shortenBtn');
+    const btnText = document.getElementById('btnText');
+    const resultSection = document.getElementById('resultSection');
+
+    const url = urlInput.value.trim();
+
+    // 입력 검증
+    if (!url) {
+      showError('URL을 입력해주세요.');
+      return;
+    }
+
+    if (!isValidUrl(url)) {
+      showError('올바른 URL 형식을 입력해주세요. (예: https://example.com)');
+      return;
+    }
+
+    // 로딩 상태
+    shortenBtn.disabled = true;
+    btnText.innerHTML = '<span class="loading"></span>';
+    errorMessage.textContent = '';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/shorten`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ originalUrl: url })
+      });
+
+      if (!response.ok) {
+        throw new Error('URL 단축에 실패했습니다.');
+      }
+
+      const data = await response.json();
+
+      // 결과 표시
+      document.getElementById('shortUrl').textContent = data.shortUrl;
+      document.getElementById('clickCount').textContent = data.clickCount || 0;
+      totalUrlsCreated++;
+      document.getElementById('totalUrls').textContent = totalUrlsCreated;
+
+      resultSection.style.display = 'block';
+      urlInput.value = '';
+
+    } catch (error) {
+      showError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      console.error('Error:', error);
+    } finally {
+      shortenBtn.disabled = false;
+      btnText.textContent = '단축하기';
+    }
+  }
+
+  function isValidUrl(string) {
+    try {
+      const url = new URL(string);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+  }
+
+  async function copyToClipboard() {
+    const shortUrl = document.getElementById('shortUrl').textContent;
+    const copyBtn = document.getElementById('copyBtn');
+
+    try {
+      await navigator.clipboard.writeText(shortUrl);
+      copyBtn.textContent = '복사됨!';
+      copyBtn.style.background = '#48bb78';
+
+      setTimeout(() => {
+        copyBtn.textContent = '복사하기';
+        copyBtn.style.background = '#667eea';
+      }, 2000);
+    } catch (err) {
+      console.error('복사 실패:', err);
+      // 폴백: 수동 선택
+      selectText(document.getElementById('shortUrl'));
+    }
+  }
+
+  function selectText(element) {
+    const range = document.createRange();
+    range.selectNode(element);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  }
+
+  // 페이지 로드 시 통계 초기화
+  window.addEventListener('load', function() {
+    // 실제 환경에서는 서버에서 전체 통계를 가져올 수 있습니다
+    document.getElementById('totalUrls').textContent = totalUrlsCreated;
+  });
+</script>
+</body>
+</html>
