@@ -13,6 +13,17 @@ java {
     }
 }
 
+// 이 설정이 있는지 확인
+jar {
+    enabled = false
+}
+
+// 또는 bootJar 설정
+bootJar {
+    enabled = true
+    archiveClassifier = ''
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
